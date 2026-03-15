@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Boutique de Bonbons</title>
+<style>
+/* --- Fond animé --- */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    position: relative;
+    color: #333;
+}
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -2;
+    background: linear-gradient(135deg, #5ac8fa, #ff4da6);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+}
+@keyframes gradientBG {
+    0% {background-position:0% 50%;}
+    50% {background-position:100% 50%;}
+    100% {background-position:0% 50%;}
+}
+
+/* --- Header --- */
+header {
+    text-align: center;
+    padding: 30px;
+    color: white;
+    text-shadow:2px 2px 10px #ff69b4;
+}
+header h1 { font-size:3em; animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.1);} }
+
+/* --- Container produits --- */
+.container { padding: 40px; }
+.products {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+    gap: 25px;
+}
+.product {
+    background: rgba(255,255,255,0.95);
+    border-radius: 15px;
+    padding: 15px;
+    text-align: center;
+    box-shadow:0 0 20px rgba(255,77,166,0.6);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.product:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 0 30px rgba(255,77,166,0.9);
+}
+.product img {
+    width:120px;
+    height:auto;
+    cursor:pointer;
+}
+button {
+    background: linear-gradient(45deg,#ff4da6,#ff69b4);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    box-shadow:0 5px 15px rgba(255,77,166,0.6);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+button:hover {
+    transform: scale(1.1);
+    box-shadow:0 8px 25px rgba(255,77,166,0.9);
+}
+
+/* --- Bonbons fixes derrière --- */
+.candies-fixed {
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    z-index:-1;
+    pointer-events:none;
+}
+
+/* --- Popup description --- */
+#popup {
+    display:none;
+    position:fixed;
+    top:50%; left:50%;
+    transform:translate(-50%, -50%);
+    background:white;
+    padding:25px;
+    border-radius:15px;
+    box-shadow:0 0 25px rgba(0,0,0,0.5);
+    z-index:20;
+    max-width:400px;
+    text-align:center;
+}
+#popup img { width:200px; height:auto; margin-bottom:10px; }
+.close { position:absolute; top:5px; right:10px; cursor:pointer; font-size:18px; font-weight:bold; color:#ff4da6; }
+
+/* --- Panier popup --- */
+#cart-icon{
+    position:fixed;
+    top:20px;
+    right:20px;
+    font-size:20px;
+    background:purple;
+    border-radius:50%;
+    padding:12px;
+    cursor:pointer;
+    box-shadow:0 0 10px rgba(0,0,0,0.3);
+  z-index:900
+}
+#cartPopup{
+    display:none;
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,0.5);
+    justify-content:center;
+    align-items:center;
+}
+#cartContent{
+    background:white;
+    padding:30px;
+    border-radius:15px;
+    width:400px;
+    max-height:80%;
+    overflow:auto;
+}
+.cartItem{
+    display:flex;
+    align-items:center;
+    margin-bottom:15px;
+}
+.cartItem img{ width:60px; margin-right:10px; }
+.pay{ background:green; margin-top:20px; width:100%; color:white; font-weight:bold; padding:10px; border:none; border-radius:10px; cursor:pointer; }
+footer{ text-align:center; padding:20px; background: rgba(255,255,255,0.8); color:#ff4da6; font-weight:bold; text-shadow:1px 1px 5px white; }
+</style>
+</head>
+<body>
+
+<div id="cart-icon" onclick="openCart()">🛒</div>
+
+<div class="candies-fixed">
+<img src="https://i.postimg.cc/DwpNsw-XM/Sans-titre-13-20260311183910.png" style="position:absolute; top:20px; left:30px; width:420px;">
+<img src="https://i.postimg.cc/DwpNsw-XM/Sans-titre-13-20260311183910.png" style="position:absolute; top:10px; right:40px; width:450px;">
+<img src="https://i.postimg.cc/DwpNsw-XM/Sans-titre-13-20260311183910.png" style="position:absolute; top:380px; left:55%; width:400px;">
+</div>
+
+<header>
+<h1>🍬 The sweet's Family Shop</h1>
+<p>Les meilleurs bonbons au meilleur prix !</p>
+</header>
+
+<div class="container">
+<h2>Nos Bonbons</h2>
+  <div class="filters">
+
+
+<div class="filters">
+<button onclick="filterProducts('all')">Tous</button>
+<button onclick="filterProducts('sucre')">Bonbons sucrés</button>
+<button onclick="filterProducts('acidule')">Bonbons acidulés</button>
+<button onclick="filterProducts('chewing')">Chewing-gum</button>
+<button onclick="filterProducts('reglisse')">Réglisse</button>
+<button onclick="filterProducts('a venir')">à venir</button>
+</div>
+
+<div class="products">
+
+
+<!-- Tous les bonbons -->
+  
+<div class="product" data-category="sucre">
+    <img src="https://tse3.mm.bing.net/th/id/OIP.7IlI3yHFaFvb2jeF3zqU6AHaHR?pid=Api&P=0&h=180" alt="Dragibus"
+         onclick="showPopup('Dragibus','Bonbon Dragibus sucré et coloré - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, sucre, amidon, dextrose, acidifiant : acide citrique, acide malique, correecteurs d acidité : citrate monosodique, citrates de calcium, malates de sodium, arômes, colorants : curcumine, bleu patenté V, charbons végétal, carotènes mélangés, anthocyanes, agents d enrobage : cire          d abeille, cire de carnauba','https://tse3.mm.bing.net/th/id/OIP.7IlI3yHFaFvb2jeF3zqU6AHaHR?pid=Api&P=0&h=180')">
+    <h3>Dragibus</h3>
+    <p>1,90 € / 100g</p>
+    <input type="number" id="qtyDragibus" value="1" min="1">
+    <button onclick="addToCart('Dragibus',1.9,'qtyDragibus')">Ajouter au panier</button>
+  </div>
+
+<div class="product" data-category="sucre">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbLCvkC__EI3tSlAx18Xp_S-Dou5aIZJGlpw&s" alt="Coca"
+         onclick="showPopup('Coca','Bonbon Coca sucré - Ingrédients : Sirop de glucose, sucre, gélatine, dextrose, acidifiant : acide citrique, sirop de caramel, arômes, agent d enrobage : cire de carnauba.','https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbLCvkC__EI3tSlAx18Xp_S-Dou5aIZJGlpw&s')">
+    <h3>Coca</h3>
+    <p>1,90 € / 100g</p>
+    <input type="number" id="qtyCoca" value="1" min="1">
+    <button onclick="addToCart('Coca',1.9,'qtyCoca')">Ajouter au panier</button>
+  </div>
+
+<div class="product" data-category="acidule">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyn15eXKvYIymkeBna9oD5TzWk402ae-AAqw&s" alt="Coca Acidulé"
+onclick="showPopup('Coca Acidulé','Bonbons goût cola acidulé - Ingrédients : Sirop de glucose, sucre, humectant : sirop de sorbitol, eau, gélatine, acidifiant : acide citrique, acide malique, correcteurs d acidité : malate acide de sodium, citrate trisodique, gélifiant : pectine amidée, arôme, sirop de caramel. Peut contenir des traces de Blé et de Lait.','https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyn15eXKvYIymkeBna9oD5TzWk402ae-AAqw&s')">
+<h3>Coca Acidulé</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyCocaAcidule" value="1" min="1">
+<button onclick="addToCart('Coca Acidulé',1.9,'qtyCocaAcidule')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="acidule">
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_4704676b.jpg?v=1527153233" alt="Langue Acidulé"
+onclick="showPopup('Langue Acidulé','Bonbons langue acidulée - Ingrédients : Sucre, sirop de glucose, amidon modifié (dont blé), acidifiants (acide lactique, acide malique, acide citrique), gélatine, correcteur d acidité (malate de sodium), arômes, colorants (anthocyanes, curcumine, extrait de paprika), denrées alimentaires colorantes (concentré de carthame et spiruline).','https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_4704676b.jpg?v=1527153233')">
+<h3>Langue Acidulé</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyLangueAcidule" value="1" min="1">
+<button onclick="addToCart('Langue Acidulé',1.9,'qtyLangueAcidule')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="acidule">
+<img src="https://tse4.mm.bing.net/th/id/OIP.pv3ZQRxIxLxYKT_V_dZwJgAAAA?pid=Api&P=0&h=180" alt="ceinture fraise"
+onclick="showPopup('ceinture fraise','Bonbons ceinture acidulé - Ingrédients : (sous réserve de modifications effectuées par le fabricant) Sirop de glucose, eau, amidon de maïs, humectant : glycérine, acidifiant : acide citrique, acide malique, graisse végétale (palme), acidifiant : citrate de sodium, arômes, émusifiant E471, conservateur : sorbate de potassium, colorant E120.).','https://tse4.mm.bing.net/th/id/OIP.pv3ZQRxIxLxYKT_V_dZwJgAAAA?pid=Api&P=0&h=180')">
+<h3>ceinture fraise</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyceinturefraise" value="1" min="1">
+<button onclick="addToCart('ceinture fraise',1.9,'qtyceinturefraise')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="sucre">
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_8719191b.jpg?v=1517926804" alt="arlequin"
+onclick="showPopup('arlequin','- Ingrédients : sirop de glucose, sucre, gélatine, acidifiant : acide citrique, arômes, colorants : curcumin, rouge cochenille, complexe de chlorophylle, oleopaprika.).','https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_8719191b.jpg?v=1517926804')">
+<h3>arlequin</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyarlequin" value="1" min="1">
+<button onclick="addToCart('arlequin',1.9,'qtyarlequin')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="sucre">
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_5597193b.jpg?v=1519461404" alt="Oeufs"
+onclick="showPopup('Oeufs','Bonbons en forme d’oeufs - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, sucre, eau, gélatine de boeuf, amidon modifié de pomme de terre, acidifiants : E330, E270, E296, arôme, agent d enrobage : cire de carnauba, colorants E100. Sans Gluten.','https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_5597193b.jpg?v=1519461404')">
+<h3>Oeufs</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyOeufs" value="1" min="1">
+<button onclick="addToCart('Oeufs',1.9,'qtyOeufs')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="sucre">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbMWLPFy4hcnkoNrUCny1x7yIkyGYGdKUlFA&s" alt="Ananas Lisse"
+onclick="showPopup('Ananas Lisse','Bonbons goût ananas - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, eau, sucre, amidon, gélatine de boeuf, acidifiant : acide citrique, régulateur d acidité : citrate de sodium, agent d enrobage : cire de caranuba, colorants : E100, E133. ✔️ sans gluten ❌ halal.','https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbMWLPFy4hcnkoNrUCny1x7yIkyGYGdKUlFA&s')">
+<h3>Ananas Lisse</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyAnanasLisse" value="1" min="1">
+<button onclick="addToCart('Ananas Lisse',1.9,'qtyAnanasLisse')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="sucre">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJb2pkxDL7iIbSYNSl58UPVdScHQdAGgov3Q&s" alt="Banane Sucré"
+onclick="showPopup('Banane Sucré','Bonbons goût banane sucré - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, eau, sucre, gélatine de boeuf, acidifiant : acide citrique, gelifiant: pectine, arômes, régulateur d acidité : citrate de sodium, colorant E100. ','https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQJb2pkxDL7iIbSYNSl58UPVdScHQdAGgov3Q&s')">
+<h3>Banane Sucré</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyBananeSucre" value="1" min="1">
+<button onclick="addToCart('Banane Sucré',1.9,'qtyBananeSucre')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="acidule">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ1r_DnufBHU0UppAEEORE0isPzbBrd5eWfJA&s" alt="Crocodile Acidulé"
+onclick="showPopup('Crocodile Acidulé','Bonbons crocodile acidulé - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, sucre, eau, gélatine de boeuf, amidon modifié de pomme de terre, acidifiants : E270, E330, agent d enrobage : huile végétale (palme et coco) E901, E903, pectine, arômes, colorants : E129, E100, E133. Sans Gluten.','https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ1r_DnufBHU0UppAEEORE0isPzbBrd5eWfJA&s')">
+<h3>Crocodile Acidulé</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyCrocodileAcidule" value="1" min="1">
+<button onclick="addToCart('Crocodile Acidulé',1.9,'qtyCrocodileAcidule')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="sucre">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2FJ4HztCMi4n1p7MyZFEDVPzuKELyOnLPxA&s" alt="Mini Nounours"
+onclick="showPopup('Mini Nounours','Mini oursons colorés  Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, eau, sucre, amidon, gélatine de boeuf, acidifiant : acide citrique E330, régulateur d acidité : citrate de sodium E331, agent d enrobage : cire de caranuba E903, colorants : E100, E120, E133. ✔️ sans gluten.' , 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2FJ4HztCMi4n1p7MyZFEDVPzuKELyOnLPxA&s')">
+<h3>Mini Nounours</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyMiniNounours" value="1" min="1">
+<button onclick="addToCart('Mini Nounours',1.9,'qtyMiniNounours')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category='chewing'>
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR2YBSNPBAuXRxv0jCbm9_6t54kDwvur3dsEg&s" alt="Bubble Gum Balls 3g"
+onclick="showPopup('Bubble Gum Balls 3g','Bonbons bubble gum - Ingrédients : (sous réserve de modification par le fabricant) Sucre, Gomme base, Sirop de glucose; Acidifiant: Acide citrique; arômes, Dextrose, Humectant: Glycérol; Émulsifiant: Lécithine de tournessol, Lécithine de soja; Antiagglomérant: Phosphates de calcium; Agent d´enrobage: Gomme laque, Cire d abeille, Cire de carnauba; Huile d´olive, Antioxygène: BHA, BHT; Colorants: E100, E120, E133, E153.','https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR2YBSNPBAuXRxv0jCbm9_6t54kDwvur3dsEg&s')">
+<h3>Bubble Gum Balls 3g</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyBubbleGum" value="1" min="1">
+<button onclick="addToCart('Bubble Gum Balls 3g',1.9,'qtyBubbleGum')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="sucre">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnBjqfX4iJHBDMYVL9dVZ_Xd7GTe1odMPTow&s" alt="Spaghettis Pomme"
+onclick="showPopup('Spaghettis Pomme','Bonbons spaghettis goût pomme - Ingrédients : (sous réserve de modifications effectuées par le fabricant) Sirop de glucose-fructose, amidon, sucre, sirop de sucre inverti, farine de blé, eau, acidifiants E330, E296, maltodextrine, correcteur d acidité E-332, graisse vegétale (palme), arome artificiel, agents d enrobage : cire de carnauba, émulsifiant E-322, colorants E-100, E-133. Contient du GLUTEN.','https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnBjqfX4iJHBDMYVL9dVZ_Xd7GTe1odMPTow&s')">
+<h3>Spaghettis Pomme</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtySpagPomme" value="1" min="1">
+<button onclick="addToCart('Spaghettis Pomme',1.9,'qtySpagPomme')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="sucre">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSyJ1HhucGYDU2aV5_cdrEVgCC0xRJhgvj2pw&s" alt="Spaghettis Fraise"
+onclick="showPopup('Spaghettis Fraise','Bonbons spaghettis goût fraise - Ingrédients : (sous réserve de modifications effectuées par le fabricant) Sirop de glucose-fructose, amidon, sucre, sirop de sucre inverti, farine de blé, eau, acidifiants E330, E296, maltodextrine, correcteur d acidité E-332, graisse vegétale (palme), arome artificiel, agents d enrobage : cire de carnauba, émulsifiant E-322, colorant E-129. Contient du GLUTEN.','https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSyJ1HhucGYDU2aV5_cdrEVgCC0xRJhgvj2pw&s')">
+<h3>Spaghettis Fraise</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtySpagFraise" value="1" min="1">
+<button onclick="addToCart('Spaghettis Fraise',1.9,'qtySpagFraise')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="sucre">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR7g-PPCuybLYxjOhZsHzvqYUe-nODId-I4mA&s" alt="Spaghettis Cola"
+onclick="showPopup('Spaghettis Cola','Bonbons spaghettis goût cola - Ingrédients : (sous réserve de modifications effectuées par le fabricant) Sirop de glucose-fructose, amidon, sucre, sirop de sucre inverti, farine de blé, eau, acidifiants E330, E296, maltodextrine, correcteur d acidité E-332, graisse vegétale (palme), arome artificiel, agents d enrobage : cire de carnauba, émulsifiant E-322, colorant E-150c. Contient du GLUTEN.','https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR7g-PPCuybLYxjOhZsHzvqYUe-nODId-I4mA&s')">
+<h3>Spaghettis Cola</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtySpagCola" value="1" min="1">
+<button onclick="addToCart('Spaghettis Cola',1.9,'qtySpaghettisCola')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="acidule">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQe87lJ2zVUlikS8q8ZzZtrO19f-nSm5llu8g&s" alt="Bublizz"
+onclick="showPopup('Bublizz','Bonbons bublizz - Ingrédients : Sirop de glucose, sucre, gélatine, acidifiant : acide citrique, acide malique, correcteur d acidité (malate de sodium), denrées alimentaires colorantes(concentré de spiruline, pomme), colorants(anthocyanes), arômes.','https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQe87lJ2zVUlikS8q8ZzZtrO19f-nSm5llu8g&s')">
+<h3>Bublizz</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyBublizz" value="1" min="1">
+<button onclick="addToCart('Bublizz',1.9,'qtyBublizz')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="sucre">
+<img src="https://tse3.mm.bing.net/th/id/OIP.rHRbP59JebEbTjsQfkDemAHaHa?pid=Api&P=0&h=180" alt="Fraises Tagada"
+onclick="showPopup('Fraises Tagada','Bonbons Fraises Tagada - Ingrédients : Sucre, sirop de glucose, gélatine, acidifiant : acide citrique, arôme, colorants : curcumine, carmins, carotènes mélangés.','https://tse3.mm.bing.net/th/id/OIP.rHRbP59JebEbTjsQfkDemAHaHa?pid=Api&P=0&h=180')">
+<h3>Fraises Tagada</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyFraisesTagada" value="1" min="1">
+<button onclick="addToCart('Fraises Tagada',1.9,'qtyFraisesTagada')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="sucre">
+<img src="https://tse2.mm.bing.net/th/id/OIP.G4Lgji5mTI8xpZKSxRTUKQHaHa?pid=Api&P=0&h=180" alt="tétine assortiment"
+onclick="showPopup('tétine assortiment','Bonbons tétine assortiment - - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, sucre, eau, gélatine de boeuf, amidon modifié de pomme de terre, acidifiants : E330, E270, E296, correcteur d acidité : malate de sodium, arôme, colorants E100, E163, E129, E160a(I), E133. Sans Gluten','https://tse2.mm.bing.net/th/id/OIP.G4Lgji5mTI8xpZKSxRTUKQHaHa?pid=Api&P=0&h=180')">
+<h3>tétine assortiment</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtytétine assortiment" value="1" min="1">
+<button onclick="addToCart('tétine assortiment',1.9,'qtytétine assortiment')">Ajouter au panier</button>
+</div>
+
+ <div class="product" data-category="sucre">
+<img src="https://tse3.mm.bing.net/th/id/OIP.y28M2JqiihJCvIpM-W7fhgHaHa?pid=Api&P=0&h=180" alt="coeur orange et rouge"
+onclick="showPopup('coeur orange et rouge','Bonbons coeur orange et rouge - - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, eau, sucre, amidon, gélatine de boeuf, acidifiants : acide citrique, acide malique, arômes, régulateur d acidité : citrate de sodium, colorants : E102, E129.','https://tse3.mm.bing.net/th/id/OIP.y28M2JqiihJCvIpM-W7fhgHaHa?pid=Api&P=0&h=180')">
+<h3>coeur orange et rouge</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtycoeurorangeetrouge" value="1" min="1">
+<button onclick="addToCart('coeur orange et rouge',1.9,'qtycoeurorangeetrouge')">Ajouter au panier</button>
+</div>
+
+  <div class="product" data-category="sucre">
+<img src="https://tse2.mm.bing.net/th/id/OIP.uGx_dL9jqnVe3TDxm7gP6gHaHa?pid=Api&P=0&h=180" alt="coeur rose"
+onclick="showPopup('coeur rose','Bonbons coeur rose - Ingrédients : Sucre, sirop de glucose, gélatine, acidifiant : acide citrique, arôme, colorants : curcumine, carmins, carotènes mélangés.','https://tse2.mm.bing.net/th/id/OIP.uGx_dL9jqnVe3TDxm7gP6gHaHa?pid=Api&P=0&h=180')">
+<h3>coeur rose</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtycoeur rose" value="1" min="1">
+<button onclick="addToCart('coeur rose',1.9,'qtycoeur rose')">Ajouter au panier</button>
+</div>
+
+<div class="product"data-category="sucre">
+<img src="https://tse1.mm.bing.net/th/id/OIP.Mtr9abzpNsgTrx_9Wrm8bwHaHa?pid=Api&P=0&h=180" alt="bisous"
+onclick="showPopup('bisous','Bonbons bisous - Ingrédients : Sucre, sirop de glucose, gélatine, acidifiant : acide citrique, arôme, colorants : curcumine, carmins, carotènes mélangés.','https://tse1.mm.bing.net/th/id/OIP.Mtr9abzpNsgTrx_9Wrm8bwHaHa?pid=Api&P=0&h=180')">
+<h3>bisous</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtybisous" value="1" min="1">
+<button onclick="addToCart('bisous',1.9,'qtybisous')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="sucre">
+<img src="https://tse2.mm.bing.net/th/id/OIP.haJjAY-qLgWhShU3twx1BQHaHa?pid=Api&P=0&h=180" alt="dent lisse"
+onclick="showPopup('dent lisse','Bonbons dent lisse - Ingrédients : Sucre, sirop de glucose, gélatine, acidifiant : acide citrique, arôme, colorants : curcumine, carmins, carotènes mélangés.','https://tse2.mm.bing.net/th/id/OIP.haJjAY-qLgWhShU3twx1BQHaHa?pid=Api&P=0&h=180')">
+<h3>dent lisse</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtydent lisse" value="1" min="1">
+<button onclick="addToCart('dent lisse',1.9,'qtydent lisse')">Ajouter au panier</button>
+</div>
+
+ <div class="product" data-category="acidule">
+<img src="https://tse1.mm.bing.net/th/id/OIP.1MT-xIy6UnraeRpRUUs6vAHaHa?pid=Api&P=0&h=180" alt="octopus acidulé"
+onclick="showPopup('octopus acidulé','Bonbons octopus acidulé - Ingrédients : (sous réserves de modification par le fabricant) Sirop de glucose, eau, sucre, amidon, gélatine, acidifiants : acide citrique, acide malique, arômes, régulateur d acidité : citrate de sodium, colorants : E100, E120, E133.','https://tse1.mm.bing.net/th/id/OIP.1MT-xIy6UnraeRpRUUs6vAHaHa?pid=Api&P=0&h=180')">
+<h3>octopus acidulé</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyoctopus acidulé" value="1" min="1">
+<button onclick="addToCart('octopus acidulé',1.9,'qtyoctopus acidulé')">Ajouter au panier</button>
+</div>
+  
+  <div class="product" data-category="acidule">
+<img src="https://tse3.mm.bing.net/th/id/OIP.3qqjwzDiK99a-EXUTo2DHAHaHa?pid=Api&P=0&h=180" alt="pastèque acidulé"
+onclick="showPopup('pastèque acidulé','Bonbons pastèque acidulé - - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, eau, sucre, amidon, gélatine de boeuf, acidifiants : acide citrique, acide malique, arômes, régulateur d acidité : citrate de sodium, colorants : E100, E120, E133. ','https://tse3.mm.bing.net/th/id/OIP.3qqjwzDiK99a-EXUTo2DHAHaHa?pid=Api&P=0&h=180')">
+<h3>pastèque acidulé</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtypastèque acidulé" value="1" min="1">
+<button onclick="addToCart('pastèque acidulé',1.9,'qtypastèque acidulé')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="sucre">
+<img src="https://tse1.mm.bing.net/th/id/OIP.KadSDkMxKAvh2uUFNgmsggHaHa?pid=Api&P=0&h=180" alt="minimax"
+onclick="showPopup('minimax','Bonbons minimax - Ingrédients : (sous réserve de modifications par le fabricant) Sirop de glucose, eau, sucre, amidon, gélatine, acidifiants : acide citrique, acide malique, arômes, régulateur d acidité : citrate de sodium, colorants : E100, E120, E133.','https://tse1.mm.bing.net/th/id/OIP.KadSDkMxKAvh2uUFNgmsggHaHa?pid=Api&P=0&h=180')">
+<h3>minimax</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyminimax" value="1" min="1">
+<button onclick="addToCart('minimax',1.9,'qtyminimax')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="sucre">
+<img src="https://tse1.mm.bing.net/th/id/OIP.QOHS21Q1doE6gH_hRCsMHAHaHa?pid=Api&P=0&h=180" alt="jelly max"
+onclick="showPopup('jelly max','Bonbons jelly max - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, eau, sucre, amidon, gélatine de boeuf, acidifiant : acide citrique, régulateur dnacidité : citrate de sodium, agent d enrobage : cire de caranuba, colorants : E100, E102, E129, E133.','https://tse1.mm.bing.net/th/id/OIP.QOHS21Q1doE6gH_hRCsMHAHaHa?pid=Api&P=0&h=180')">
+<h3>jelly max</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyjelly max" value="1" min="1">
+<button onclick="addToCart('jelly max',1.9,'qtyjelly max')">Ajouter au panier</button>
+</div>
+
+  <div class="product" data-category="sucre">
+<img src="https://tse3.mm.bing.net/th/id/OIP.kK6ZNfaxS2Rsuw1YW7nKGAHaHa?pid=Api&P=0&h=180" alt="pieuvre lisse color la langue"
+onclick="showPopup('pieuvre lisse color la langue','Bonbons pieuvre lisse color la langue - Ingrédients : Sirop de glucose, sucre, gélatine, acidifiant : acide citrique, acide lactique,stabilisant : sorbitol, gélifiant : pectine, arômes, colorants : concentré de fruits et préparation d extraits végétal (paprika), carmin, bleu patenté V, huile végétale, agent d enrobage, cire d abeille, cire de carnauba.','https://tse3.mm.bing.net/th/id/OIP.kK6ZNfaxS2Rsuw1YW7nKGAHaHa?pid=Api&P=0&h=180')">
+<h3>pieuvre lisse color la langue</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtypieuvre lisse color la langue" value="1" min="1">
+<button onclick="addToCart('pieuvre lisse color la langue',1.9,'qtypieuvre lisse color la langue')">Ajouter au panier</button>
+</div>
+
+  <div class="product" data-category="acidule">
+<img src="https://tse4.mm.bing.net/th/id/OIP.LFFK8XDpr4DHG6QBX0nyTAAAAA?pid=Api&P=0&h=180" alt="ceinture multicolor"
+onclick="showPopup('ceinture multicolor','Bonbons ceinture multicolor - - Ingrédients : (sous réserve de modifications effectuées par le fabricant) Sirop de glucose-Fructose, sucre, amidon, sirop de sucre inverti, farine de blé, eau, acidifiants E330, E296, maltodextrine, correcteur d acidité E-332, graisse vegétale (palme), arome artificiel, agent d enrobage : cire de carnauba, émulsifiant E-322, colorants E102, E129, E133, E110. Contient du GLUTEN.','https://tse4.mm.bing.net/th/id/OIP.LFFK8XDpr4DHG6QBX0nyTAAAAA?pid=Api&P=0&h=180')">
+<h3>ceinture multicolor</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyceinture multicolor" value="1" min="1">
+<button onclick="addToCart('ceinture multicolor',1.9,'qtyceinture multicolor')">Ajouter au panier</button>
+</div>
+
+ <div class="product" data-category="acidule">
+<img src="https://tse1.mm.bing.net/th/id/OIP.n5Agw5J1iwBeiyXlre2c8wHaHa?pid=Api&P=0&h=180" alt="ceinture framboise"
+onclick="showPopup('ceinture framboise','Bonbons ceinture framboise - - Ingrédients : (sous réserve de modifications effectuées par le fabricant) Sirop de glucose, eau, amidon de maïs, humectant : glycérine, acidifiant : acide citrique, acide malique, graisse végétale (palme), acidifiant : citrate de sodium, arômes, émusifiant E471, conservateur : sorbate de potassium, colorant E133.','https://tse1.mm.bing.net/th/id/OIP.n5Agw5J1iwBeiyXlre2c8wHaHa?pid=Api&P=0&h=180')">
+<h3>ceinture framboise</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyceinture framboise" value="1" min="1">
+<button onclick="addToCart('ceinture framboise',1.9,'qtyceinture framboise')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="acidule">
+<img src="https://tse1.mm.bing.net/th/id/OIP.cc2oC626H2ZGablZYpFNXgHaHa?pid=Api&P=0&h=180" alt="ceinture cola"
+onclick="showPopup('ceinture cola','Bonbons ceinture cola -  Ingrédients : (sous réserve de modifications effectuées par le fabricant) Sirop de glucose, eau, amidon de maïs, humectant : glycérine, acidifiant : acide citrique, acide malique, graisse végétale (palme), acidifiant : citrate de sodium, arômes, émusifiant E471, conservateur : sorbate de potassium, colorant E150d.','https://tse1.mm.bing.net/th/id/OIP.cc2oC626H2ZGablZYpFNXgHaHa?pid=Api&P=0&h=180')">
+<h3>ceinture cola</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyceinture cola" value="1" min="1">
+<button onclick="addToCart('ceinture cola',1.9,'qtyceinture cola')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="acidule">
+<img src="https://tse1.mm.bing.net/th/id/OIP.swTN8uVs0F5U1xsmUrjgjQHaHa?pid=Api&P=0&h=180" alt="ceinture pomme"
+onclick="showPopup('ceinture pomme','Bonbons ceinture pomme - Ingrédients : (sous réserve de modifications effectuées par le fabricant) Sirop de glucose, eau, amidon de maïs, humectant : glycérine, acidifiant : acide citrique, acide malique, graisse végétale (palme), acidifiant : citrate de sodium, arômes, émusifiant E471, conservateur : sorbate de potassium, colorants E100, E133.','https://tse1.mm.bing.net/th/id/OIP.swTN8uVs0F5U1xsmUrjgjQHaHa?pid=Api&P=0&h=180')">
+<h3>ceinture pomme</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyceinture pomme" value="1" min="1">
+<button onclick="addToCart('ceinture pomme',1.9,'qtyceinture pomme')">Ajouter au panier</button>
+</div>
+
+ <div class="product" data-category="sucre">
+<img src="https://tse2.mm.bing.net/th/id/OIP.OYNUhSeAvSWDPQEn0IZiFAAAAA?pid=Api&P=0&h=180" alt="anaconda"
+onclick="showPopup('anaconda','Bonbons anaconda - Ingrédients : Sirop de glucose, Sucre, Gélatine; Humectant: Sorbitols; Amidon de maïs; Acidifiant: Acide citrique; Concentré végétale: Radis, Cassis, Carotte; arômes, huiles végétales (palme); Agent d´enrobage: Cire de carnauba, Cire d abeille, Colorants: E100, E120, E133, E160a, E160c.','https://tse2.mm.bing.net/th/id/OIP.OYNUhSeAvSWDPQEn0IZiFAAAAA?pid=Api&P=0&h=180')">
+<h3>anaconda</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyanaconda" value="1" min="1">
+<button onclick="addToCart('anaconda',1.9,'qtyanaconda')">Ajouter au panier</button>
+</div>
+
+ <div class="product" data-category="sucre">
+<img src="https://tse4.mm.bing.net/th/id/OIP.fGnqpnWbh5h4EJUM2_7D1AHaHa?pid=Api&P=0&h=180" alt="dauphin géant"
+onclick="showPopup('dauphin géant','Bonbons dauphin géant - Ingrédients : Sucre, sirop de glucose, gélatine, acidifiant : acide citrique, arôme, colorants : curcumine, carmins, carotènes mélangés.','https://tse4.mm.bing.net/th/id/OIP.fGnqpnWbh5h4EJUM2_7D1AHaHa?pid=Api&P=0&h=180')">
+<h3>dauphin géant</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtydauphin géant" value="1" min="1">
+<button onclick="addToCart('dauphin géant',1.9,'qtydauphin géant')">Ajouter au panier</button>
+</div>
+
+ <div class="product" data-category="sucre">
+<img src="https://tse2.mm.bing.net/th/id/OIP.J9qbpBnqDRjo2UEfQ67AaAHaHa?pid=Api&P=0&h=180" alt="hitschies"
+onclick="showPopup('hitschies','Bonbons hitschies - Ingrédients : (sous réserves de modifications par le fabricant) Sucre, sirop de glucose, graisse de palme, jus de fruits à base de concentrés (pomme, pêche, citron, fraise, framboise), gélatine bovine, stabilisant : gomme arabique, amidon modifié, acidifiants : acide lactique, acide citrique, arômes, émulsifiant : lécithines, colorants : carmins, crucumine, bleu pbrillant FCF, charbon végétal médicinal, dextrose, agents d enrobage : cire de carnauba, shellac, cire d abeille blanche et jaune.','https://tse2.mm.bing.net/th/id/OIP.J9qbpBnqDRjo2UEfQ67AaAHaHa?pid=Api&P=0&h=180')">
+<h3>hitschies</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyhitschies" value="1" min="1">
+<button onclick="addToCart('hitschies',1.9,'qtyhitschies')">Ajouter au panier</button>
+</div>
+
+  <div class="product" data-category="sucre">
+<img src="https://tse4.mm.bing.net/th/id/OIP.NbXX8Rgk2-lAjFN8uPavBAHaHa?pid=Api&P=0&h=180" alt="collier bonbon"
+onclick="showPopup('collier bonbon','Bonbons collier bonbon - Ingrédients : (sous réserve de modification par le fabricant) Glucose, sirop de maltose, maltodextrine, antiagglomérant E470b, acidifiant E330, émulsifiant : E470b, arômes, colorants : E101, E120, E133.','https://tse4.mm.bing.net/th/id/OIP.NbXX8Rgk2-lAjFN8uPavBAHaHa?pid=Api&P=0&h=180')">
+<h3>collier bonbon</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtycollier bonbon" value="1" min="1">
+<button onclick="addToCart('collier bonbon',1.9,'qtycollier bonbon')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="acidule">
+<img src="https://sp.yimg.com/ib/th?id=OPEC.ZSrf%2biHAY9TjLA474C474&o=5&pid=21.1&w=174&h=174" alt="soucoupe"
+onclick="showPopup('soucoupe','Bonbons soucoupe - Ingrédients : sucre, amidon de maïs, eau, dextrose, acidifiant (acide tartrique), correcteur d acidité (carbonate acide de sodium), arômes, colorants (curcumine, indigotine, rouge de betterave). ','https://sp.yimg.com/ib/th?id=OPEC.ZSrf%2biHAY9TjLA474C474&o=5&pid=21.1&w=174&h=174')">
+<h3>soucoupe</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtysoucoupe" value="1" min="1">
+<button onclick="addToCart('soucoupe',1.9,'qtysoucoupe')">Ajouter au panier</button>
+</div>
+
+  <div class="product" data-category="sucre">
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_10757170b.jpg?v=1560415227" alt="lèvre sucrée"
+onclick="showPopup('lèvre sucrée','Bonbons lèvre sucrée - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, sucre, eau, gélatine de boeuf, amidon modifié de pomme de terre, acidifiants : E330, E270, E296, arômes, agent d enrobage : cire de carnauba, colorants : E100, E163, E160a, E129, E133. Sans Gluten.','https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_10757170b.jpg?v=1560415227')">
+<h3>lèvre sucrée</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtylèvre sucrée" value="1" min="1">
+<button onclick="addToCart('lèvre sucrée',1.9,'qtylèvre sucrée')">Ajouter au panier</button>
+</div>
+
+ <div class="product" data-category="sucre">
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_10719925b.jpg?v=1551977007" alt="petit coeur frais crème"
+onclick="showPopup('petit coeur frais crème','Bonbons petit coeur frais crème - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, sucre, eau, gélatine de boeuf, amidon modifié de pomme de terre, acidifiants : E330, E270, agent d enrobage : huile végétale (palme) E901, E903, arômes, colorants : E163, E129, E160a.','https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_10719925b.jpg?v=1551977007')">
+<h3>petit coeur frais crème</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtypetit coeur frais crème" value="1" min="1">
+<button onclick="addToCart('petit coeur frais crème',1.9,'qtypetit coeur frais crème')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="sucre">
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_10983136b.jpg?v=1584113957" alt="tetine framboise"
+onclick="showPopup('tetine framboise','Bonbons tetine framboise - - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, sucre, eau, gélatine de boeuf, amidon modifié de pomme de terre, acidifiants : E330, E270, E296, arômes, agent d enrobage : cire de carnauba, colorant E133. Sans Gluten.','https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_10983136b.jpg?v=1584113957')">
+<h3>tetine framboise</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtytetine framboise" value="1" min="1">
+<button onclick="addToCart('tetine framboise',1.9,'qtytetine framboise')">Ajouter au panier</button>
+</div>
+
+  <div class="product" data-category="sucre">
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_10983165b.jpg?v=1584113915" alt="collier bonbon"
+onclick="showPopup('os rouge','Bonbons os rouge -- Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, sucre, eau, amidons modifié de pomme de terre, gélatine de boeuf, acidifiants : E270, E330, agent d enrobage : huile végétale (palme), E901, E903, arômes, colorants : E163, E129, E160a. Sans Glutencom/www.confiserie-foraine.com/content/product_10983165b.jpg?v=1584113915')">
+<h3>os rouge</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyos rouge" value="1" min="1">
+<button onclick="addToCart('os rouge',1.9,'qtyos rouge')">Ajouter au panier</button>
+</div>
+
+   <div class="product" data-category="sucre">
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_9498470b.jpg?v=1527596236" alt="Bille dragéifiée"
+onclick="showPopup('Bille dragéifiée','Bonbons Bille dragéifiée - - Ingrédients : Sucre, sirop de glucose, amidon de blé et autres amidons, agent d enrobage E903, arôme.','https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_9498470b.jpg?v=1527596236')">
+<h3>Bille dragéifiée</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyBille dragéifiée" value="1" min="1">
+<button onclick="addToCart('Bille dragéifiée',1.9,'qtyBille dragéifiée')">Ajouter au panier</button>
+</div>
+
+ <div class="product" data-category='chewing'>
+<img src="https://tse1.mm.bing.net/th/id/OIP.pePWquwaPTJ22JKiWQIJpAHaHa?pid=Api&P=0&h=180" alt="Boule Magique Gum"
+onclick="showPopup('Boule Magique Gum','Bonbons Boule Magique Gum - - Ingrédients : (sous réserve de modifications par le fabricant) Sucre, dextrose, gomme base, sirop de glucose, humectant : glycerine;  acidifiants:  acide malique, acide citrique;  aromes,  amidon  modifie,  colorant : e133; concentre de carotte noire, agent denrobage: e903 ; antioxydant: e321','https://tse1.mm.bing.net/th/id/OIP.pePWquwaPTJ22JKiWQIJpAHaHa?pid=Api&P=0&h=180')">
+<h3>Boule Magique Gum</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyBoule Magique Gum" value="1" min="1">
+<button onclick="addToCart('collier Boule Magique Gum',1.9,'qtyBoule Magique Gum')">Ajouter au panier</button>
+</div>
+
+  <div class="product" data-category="sucre">
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_11794018b.jpg?v=1701336319" alt="fleur sucrée"
+onclick="showPopup('fleur sucrée','Bonbons fleur sucrée - Ingrédients : (sous réserve de modification par le fabricant) Sucre, sirop de glucose, eau, gélatine de boeuf, acidifiants : acide citrique, gélifiant : pectine, arômes, régulateur d acidité : citrate de sodium, colorants E100, E120, E133. ✔️ sans gluten ❌ halal','https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_11794018b.jpg?v=1701336319')">
+<h3>fleur sucrée</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyfleur sucrée" value="1" min="1">
+<button onclick="addToCart('fleur sucrée',1.9,'qtyfleur sucrée')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="sucre">
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_4861034b.jpg?v=1622015958" alt="fraise sucrée"
+onclick="showPopup('fraise sucrée','Bonbons fraise sucrée - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, eau, sucre, amidon, gélatine de boeuf, acidifiants : acide citrique, acide malique, arômes, régulateur d acidité : citrate de sodium, colorants : E100, E120, E133. ✔️ sans gluten ✔️ halal','https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_4861034b.jpg?v=1622015958')">
+<h3>fraise sucrée</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyfraise sucrée" value="1" min="1">
+<button onclick="addToCart('fraise sucrée',1.9,'qtyfraise sucrée')">Ajouter au panier</button>
+</div>
+
+ <div class="product" data-category="sucre">
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_11894469b.jpg?v=1741956132" alt="mini fraise sucrée"
+onclick="showPopup('mini fraise sucrée','Bonbons mini fraise sucrée - - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, eau, sucre, amidon, gélatine de boeuf, acidifiants : acide citrique, acide malique, arômes, régulateur d acidité : citrate de sodium, colorants : E100, E120, E133. ✔️ sans gluten ✔️ halal','https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_11894469b.jpg?v=1741956132')">
+<h3>mini fraise sucrée</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtymini fraise sucrée" value="1" min="1">
+<button onclick="addToCart('mini fraise sucrée',1.9,'qtymini fraise sucrée')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="sucre">
+<img src="https://tse2.mm.bing.net/th/id/OIP.8fxgHY_g0IKZi7QEXgnnsgAAAA?pid=Api&P=0&h=180" alt="mini ourson sucrée"
+onclick="showPopup('mini ourson sucrée','Bonbons mini ourson sucrée - - Ingrédients : Sirop de glucose, eau, sucre, amidon de maïs, stabilisants : gélatine de boeuf, pectine, acidifiants : E330, E334, E296, arômes, huile bégétale (de palme et de coco), agent d enrobage : cire de caranuba, citrate de sodium, colorants : E100, E120, E133. ✔️ sans gluten ✔️ halal','https://tse2.mm.bing.net/th/id/OIP.8fxgHY_g0IKZi7QEXgnnsgAAAA?pid=Api&P=0&h=180')">
+<h3>mini ourson sucrée</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtymini ourson sucrée" value="1" min="1">
+<button onclick="addToCart('mini ourson sucrée',1.9,'qtymini ourson sucrée')">Ajouter au panier</button>
+</div>
+
+  <div class="product" data-category='chewing'>
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_11920501b.jpg?v=1753362347" alt="Crazy Gummy bubble gum Macédoine de Fruits"
+onclick="showPopup('Crazy Gummy bubble gum Macédoine de Fruits','Bonbons Crazy Gummy bubble gum Macédoine de Fruits - Ingrédients : (sous réserve de modification par le fabricant) Sucre, gomme base, Sirop de glucose, arômes, humectant : glycerol, colorants : E160a, E120, E133, agent d enrobage E901, antioxydant E321.Peut contenir des traces de soja.','https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_11920501b.jpg?v=1753362347')">
+<h3>Crazy Gummy bubble gum Macédoine de Fruits</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyCrazy Gummy bubble gum Macédoine de Fruits" value="1" min="1">
+<button onclick="addToCart('Crazy Gummy bubble gum Macédoine de Fruits',1.9,'qtyCrazy Gummy bubble gum Macédoine de Fruits')">Ajouter au panier</button>
+</div>
+
+  <div class="product" data-category="sucre">
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_10719792b.jpg?v=1551977040" alt="tortue sucrée"
+onclick="showPopup('tortue sucrée','Bonbons tortue sucrée - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, sucre, eau, gélatine de boeuf, amidon modifié de pomme de terre, acidifiants : E330, E270, E296, arômes, correcteur d acidité : malate de sodium, colorants : E100, E129, E133. Sans Gluten.','https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_10719792b.jpg?v=1551977040')">
+<h3>tortue sucrée</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtytortue sucrée" value="1" min="1">
+<button onclick="addToCart('tortue sucrée',1.9,'qtytortue sucrée')">Ajouter au panier</button>
+</div>
+
+   <div class="product" data-category="sucre">
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_10845984b.jpg?v=1570006972" alt="vers lisse"
+onclick="showPopup('vers lisse','Bonbons vers lisse - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, sucre, eau, gélatine de boeuf, amidon modifié de pomme de terre, acidifiants : E330, E270, agent d enrobage : huile végétale (palme), E901, E903, arômes, colorants : E100, E133, E100, E163, E160a, E129. Sans Gluten.','https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_10845984b.jpg?v=1570006972')">
+<h3>vers lisse</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyvers lisse" value="1" min="1">
+<button onclick="addToCart('vers lisse',1.9,'qtyvers lisse')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="sucre">
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_11413054b.jpg?v=1633527441" alt="pizza"
+onclick="showPopup('pizza','Bonbons pizza -Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, eau, sucre, gélatine de boeuf, amidon modifié de pomme de terre, cidifiants : E330, E170, agents d enrobage : huile végétale (palme), E901, E903, arôme, colorants :  E150c, E102, E129, E133. Sans gluten.','https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_11413054b.jpg?v=1633527441')">
+<h3>pizza</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtypizza" value="1" min="1">
+<button onclick="addToCart('pizza',1.9,'qtypizza')">Ajouter au panier</button>
+</div>
+
+   <div class="product" data-category="reglisse">
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_11940451b.jpg?v=1766057930" alt="ourson à la réglisse salée"
+onclick="showPopup('ourson à la réglisse salée','Bonbons ourson à la réglisse salée - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose, sucre, eau, gélatine de boeuf, amidon modifié de pomme de terre, acidifiants : E330, E270, arôme : chlorure d ammonium, agent d enrobage : huile végétale, (palme), E301, E903, colorants : E129, E133, E102. Sans Gluten.','https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_11940451b.jpg?v=1766057930')">
+<h3>ourson à la réglisse salée</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtyourson à la réglisse salée" value="1" min="1">
+<button onclick="addToCart('ourson à la réglisse salée',1.9,'qtyourson à la réglisse salée')">Ajouter au panier</button>
+</div>
+
+<div class="product" data-category="reglisse">
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_11079556b.jpg?v=1591780860" alt="mini cable réglisse"
+onclick="showPopup('mini cable réglisse','Bonbons mini cable réglisse - - Ingrédients : (sous réserve de modification par le fabricant) Sirop de glucose-fructose, farine de blé (Gluten), sirop de sucre inverti, sirop de mélasse, extrait de réglisse, eau, amidon de pomme de terre, huile végétale (palme) acidifiant E270, amidon modifié de maïs, humectant E422, sel, gélatine de boeuf, arômes, colorants : E100, E129, E133, E102. Allergène : Contient du Gluten.','https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_11079556b.jpg?v=1591780860')">
+<h3>mini cable réglisse</h3>
+<p>1,90 € / 100g</p>
+<input type="number" id="qtymini cable réglisse" value="1" min="1">
+<button onclick="addToCart('mini cable réglisse',1.9,'qtymini cable réglisse')">Ajouter au panier</button>
+</div>
+  
+<div class="product" data-category="a venir">
+<img src="https://www.nostalgift.com/wp-content/uploads/2016/07/bonbon-frizzy-pazzy-cola-2-300x300.jpg" alt="frizzy pazzy cola"
+onclick="showPopup('frizzy pazzy','Bonbons goût cola acidulé - Ingrédients : Sucre, lactose, gomme base (contient de la lécithine de soja), glucose, emulsifiant E422, acidifiant E330, arôme artificiel, gaz carbonique E290, antioxidant E321.','https://www.nostalgift.com/wp-content/uploads/2016/07/bonbon-frizzy-pazzy-cola-2-300x300.jpg')">
+<h3>frizzy pazzy cola</h3>
+<p>60 C / 1sachet</p>
+<input type="number" id="qtyfrizzypazzycola" value="1" min="1">
+<button onclick="ADDTOCART"('frizzy pazzy cola',60,'qtyfrizzypazzycola')">à venir</button>
+</div>
+
+<div class="product" data-category="a venir">
+<img src="https://www.nostalgift.com/wp-content/uploads/2016/02/frizzy-pazzy-fraise-poudre-crepite-bonbons-80-2.jpg" alt="frizzy pazzy fraise"
+onclick="showPopup('frizzy pazzy fraise','Bonbons goût fraise acidulé - Ingrédients : Sucre, lactose, gomme base (contient de la lécithine de soja), glucose, emulsifiant E422, acidifiant E330, arôme artificiel, gaz carbonique E290, antioxidant E321.','https://www.nostalgift.com/wp-content/uploads/2016/02/frizzy-pazzy-fraise-poudre-crepite-bonbons-80-2.jpg')">
+<h3>frizzy pazzy fraise</h3>
+<p>60 C / 1sachet</p>
+<input type="number" id="qtyfrizzypazzy" value="1" min="1">
+<button onclick="ADDTOCART"('frizzy pazzy fraise',60,'qtyfrizzypazzyfraise')">à venir</button>
+</div>
+
+  <div class="product" data-category="a venir">
+<img src="https://tse4.mm.bing.net/th/id/OIP.Aywp7GOhtRDb-6wOOoYiCwHaHa?pid=Api&P=0&h=180" alt="frizzy pazzy framboise"
+onclick="showPopup('frizzy pazzy framboise','Bonbons goût framboise acidulé - Ingrédients : Sucre, lactose, gomme base (contient de la lécithine de soja), glucose, emulsifiant E422, acidifiant E330, arôme artificiel, gaz carbonique E290, antioxidant E321.','https://tse4.mm.bing.net/th/id/OIP.Aywp7GOhtRDb-6wOOoYiCwHaHa?pid=Api&P=0&h=180)">
+<h3>frizzy pazzy framboise</h3>
+<p>60 C / 1sachet</p>
+<input type="number" id="qtyfrizzypazzyframboise" value="1" min="1">
+<button onclick="ADDTOCART"('frizzy pazzy framboise',60,'qtyfrizzypazzyframboise')">à venir</button>
+</div>
+
+  <div class="product" data-category="a venir">
+<img src="https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_11940438b.jpg?v=1770974791" alt="coca cherry lisse"
+onclick="showPopup('coca cherry lisse','Bonbons goût framboise acidulé - Ingrédients : Sucre, lactose, gomme base (contient de la lécithine de soja), glucose, emulsifiant E422, acidifiant E330, arôme artificiel, gaz carbonique E290, antioxidant E321.','https://cdn.store-factory.com/www.confiserie-foraine.com/content/product_11940438b.jpg?v=1770974791)">
+<h3>coca cherry lisse</h3>
+<p>1.90 €  / 100g</p>
+<input type="number" id="qtycocacherrylisse" value="1" min="1">
+<button onclick="ADDTOCART"('coca cherry lisse',60,'qtycocacherrylisse')">à venir</button>
+</div>
+  
+</div>
+</div>
+
+<!-- Popup produit -->
+<div id="popup">
+    <span class="close" onclick="closePopup()">✖</span>
+    <img id="popup-img" src="">
+    <h2 id="popup-name"></h2>
+    <p id="popup-desc"></p>
+</div>
+
+<!-- Popup panier -->
+<div id="cartPopup">
+    <div id="cartContent">
+        <span class="close" onclick="closeCart()">✖</span>
+        <h2>🛒 Votre panier</h2>
+        <div id="cartItems"></div>
+        <h3 id="cartTotal"></h3>
+        <button class="pay" onclick="checkout()">Payer</button>
+
+      
+    </div>
+</div>
+
+<footer>
+<p>© 2026 Ma Boutique de Bonbons</p>
+</footer>
+  
+<script>
+  
+// --- Panier ---
+let cart = [];
+
+  // --- Popup produit ---
+function showPopup(name, desc, img){
+    document.getElementById('popup-name').textContent = name;
+    document.getElementById('popup-desc').textContent = desc;
+    document.getElementById('popup-img').src = img;
+    document.getElementById('popup').style.display = 'block';
+}
+  
+
+  
+// --- Ajouter au panier ---
+function addToCart(name, price, qtyId){
+    let qty = parseInt(document.getElementById(qtyId).value);
+    if(isNaN(qty) || qty < 1) qty = 1;
+
+    let image = document.getElementById(qtyId).closest(".product").querySelector("img").src;
+
+    for(let i=0; i<qty; i++){
+        cart.push({name: name, price: price, image: image});
+    }
+
+}
+
+// --- Ouvrir popup panier ---
+function openCart(){
+    const popup = document.getElementById("cartPopup");
+    const content = document.getElementById("cartContent");
+    content.innerHTML = "";
+
+    if(cart.length === 0){
+        content.innerHTML = "<p>Votre panier est vide 😢</p>";
+    } else {
+        let total = 0;
+        let counted = {};
+
+        cart.forEach((item, index) => {
+            let key = item.name;
+            if(!counted[key]) counted[key] = {qty:0, price:item.price, image:item.image, indexes:[]};
+            counted[key].qty++;
+            counted[key].indexes.push(index);
+        });
+
+        for(let key in counted){
+            let item = counted[key];
+            total += item.qty * item.price;
+
+            let div = document.createElement("div");
+            div.classList.add("cartItem");
+            div.innerHTML = `
+                <img src="${item.image}" alt="${key}">
+                <div>
+                    <p>${key}</p>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <button onclick="decreaseQty('${key}')">-</button>
+                        <span id="qty-${key}">${item.qty}</span>
+                        <button onclick="increaseQty('${key}')">+</button>
+                    </div>
+                    <p id="price-${key}">${(item.price * item.qty).toFixed(2)} €</p>
+                    <button onclick="removeFromCart('${key}')">❌ Supprimer</button>
+                </div>
+            `;
+            content.appendChild(div);
+        }
+
+        // Total et boutons
+        let totalDiv = document.createElement("div");
+        totalDiv.innerHTML = `
+            <h3 id="cartTotal">Total: ${total.toFixed(2)} €</h3>
+            <button class="pay" onclick="checkout()">Payer</button>
+            <button style="margin-top:10px; background:red; color:white; padding:10px; border:none; border-radius:10px; cursor:pointer;" onclick="clearCart()">Vider le panier</button>
+        `;
+        content.appendChild(totalDiv);
+    }
+
+    popup.style.display = "flex";
+}
+
+// --- Modifier quantité ---
+function increaseQty(name){
+    let index = cart.findIndex(item => item.name === name);
+    if(index !== -1){
+        cart.push({...cart[index]});
+        openCart();
+    }
+}
+
+function decreaseQty(name){
+    let index = cart.findIndex(item => item.name === name);
+    if(index !== -1){
+        cart.splice(index, 1);
+        openCart();
+    }
+}
+
+// --- Supprimer un produit complet ---
+function removeFromCart(name){
+    cart = cart.filter(item => item.name !== name);
+    openCart();
+}
+
+// --- Vider le panier ---
+function clearCart(){
+    if(confirm("Voulez-vous vraiment vider le panier ?")){
+        cart = [];
+        openCart();
+    }
+}
+
+// --- Checkout simple ---
+function checkout(){
+    if(cart.length === 0){
+        alert("Votre panier est vide !");
+        return;
+    }
+    alert("Merci pour votre achat ! 💖");
+    cart = [];
+    closeCart();
+}
+
+// --- Fermer popup ---
+function closeCart(){
+    document.getElementById("cartPopup").style.display = "none";
+}
+
+// --- Fermer popup si clic en dehors ---
+document.getElementById("cartPopup").addEventListener("click", function(e){
+    if(e.target === this) closeCart();
+});
+</script>
+
+
+
+
+<script>
+
+function filterProducts(category){
+
+let products = document.querySelectorAll(".product");
+
+products.forEach(product => {
+
+if(category === "all"){
+product.style.display = "block";
+}
+
+else if(product.dataset.category === category){
+product.style.display = "block";
+}
+
+else{
+product.style.display = "none";
+}
+
+});
+
+}
+
+</script>
+  <script>
+function closePopup() {
+    document.getElementById('popup').style.display = 'none';
+}
+
+    
+// --- Paiement PayPal ---
+function checkout(){
+    if(cart.length===0){ alert("Votre panier est vide !"); return; }
+    let total = cart.reduce((sum,item)=>sum+item.price,0).toFixed(2);
+    let form = document.createElement("form");
+    form.action = "https://www.paypal.com/cgi-bin/webscr";
+    form.method = "post";
+    form.target = "_blank";
+    form.innerHTML = `
+        <input type="hidden" name="cmd" value="_xclick">
+        <input type="hidden" name="business" value="candy60700@gmail.com">
+        <input type="hidden" name="item_name" value="Commande Bonbons">
+        <input type="hidden" name="amount" value="${total}">
+        <input type="hidden" name="currency_code" value="EUR">
+    `;
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+
+</body>
+</html>
